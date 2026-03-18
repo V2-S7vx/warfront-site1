@@ -15,7 +15,7 @@ exports.handler = async (event) => {
     let body = {};
     try {
       body = JSON.parse(event.body || "{}");
-    } catch (err) {
+    } catch {
       return {
         statusCode: 400,
         headers,
@@ -26,6 +26,7 @@ exports.handler = async (event) => {
     const requiredFields = [
       "rp_name",
       "discord_username",
+      "discord_user_id",
       "email",
       "age",
       "found_us",
@@ -44,6 +45,7 @@ exports.handler = async (event) => {
 
     const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
     const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID || "1483624256909611078";
+    const PING_ROLE_ID = "1483595545548423289";
 
     if (!BOT_TOKEN) {
       return {
@@ -53,7 +55,17 @@ exports.handler = async (event) => {
       };
     }
 
-    const clean = (value) => {
+    const userId = String(body.discord_user_id).trim();
+
+    if (!/^\d{17,20}$/.test(userId)) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "discord_user_id must be a valid Discord user ID" })
+      };
+    }
+
+    const clean = (value, max = 1000) => {
       if (value === null || value === undefined) return "Not provided";
       const text = String(value).trim();
       if (!text) return "Not provided";
@@ -61,7 +73,7 @@ exports.handler = async (event) => {
         .replace(/@everyone/g, "@ everyone")
         .replace(/@here/g, "@ here")
         .replace(/<@&?\d+>/g, "[mention removed]")
-        .slice(0, 1000);
+        .slice(0, max);
     };
 
     const embed = {
@@ -70,6 +82,7 @@ exports.handler = async (event) => {
       fields: [
         { name: "RP Name", value: clean(body.rp_name), inline: true },
         { name: "Discord Username & ID", value: clean(body.discord_username), inline: true },
+        { name: "Discord User ID", value: clean(body.discord_user_id), inline: true },
         { name: "Age", value: clean(body.age), inline: true },
         { name: "Email", value: clean(body.email), inline: true },
         { name: "Found Us Via", value: clean(body.found_us), inline: true },
@@ -78,7 +91,7 @@ exports.handler = async (event) => {
         { name: "Previous Experience", value: clean(body.experience), inline: false },
         { name: "Why Join", value: clean(body.why_join), inline: false },
         { name: "About You", value: clean(body.about_you), inline: false },
-        { name: "Community Knowledge", value: clean(body.community_knowledge), inline: false },
+        { name: "Give an example of, RDM, VDM, FRP, FEARRP, and Meta Gaming", value: clean(body.community_knowledge), inline: false },
         { name: "Availability", value: clean(body.availability), inline: false }
       ],
       footer: {
@@ -86,6 +99,43 @@ exports.handler = async (event) => {
       },
       timestamp: new Date().toISOString()
     };
+
+    const components = [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 1,
+            custom_id: `app_accept_${userId}`,
+            label: "Accept"
+          },
+          {
+            type: 2,
+            style: 1,
+            custom_id: `app_decline_${userId}`,
+            label: "Decline"
+          }
+        ]
+      },
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 1,
+            custom_id: `app_us_${userId}`,
+            label: "US Faction"
+          },
+          {
+            type: 2,
+            style: 1,
+            custom_id: `app_germany_${userId}`,
+            label: "Germany Faction"
+          }
+        ]
+      }
+    ];
 
     const discordResponse = await fetch(
       `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`,
@@ -96,9 +146,13 @@ exports.handler = async (event) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          content: "New application submitted.",
+          content: `<@&${PING_ROLE_ID}> New application from <@${userId}>`,
           embeds: [embed],
-          allowed_mentions: { parse: [] }
+          components,
+          allowed_mentions: {
+            roles: [PING_ROLE_ID],
+            users: [userId]
+          }
         })
       }
     );
