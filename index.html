@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warfront 1941 Application</title>
+  <style>
+    :root {
+      --bg: #030507;
+      --panel: rgba(8, 11, 15, 0.96);
+      --text: #f4f1e8;
+      --muted: #b8b2a6;
+      --gold: #b58a36;
+      --gold-soft: #d2b06c;
+      --border: rgba(255,255,255,0.11);
+      --shadow: 0 20px 60px rgba(0,0,0,0.45);
+      --max: 1160px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(181,138,54,0.08), transparent 22%),
+        radial-gradient(circle at top center, rgba(255,255,255,0.03), transparent 30%),
+        linear-gradient(180deg, #020406 0%, #04070a 50%, #030507 100%);
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(2, 4, 6, 0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar-inner {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.92rem;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(181,138,54,0.35);
+      display: grid;
+      place-items: center;
+      color: var(--gold-soft);
+      background: radial-gradient(circle at 30% 30%, rgba(181,138,54,0.2), rgba(181,138,54,0.02));
+      box-shadow: inset 0 0 20px rgba(181,138,54,0.08);
+      font-size: 1rem;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-weight: 700;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      color: #d7d1c5;
+      font-size: 0.98rem;
+      transition: color 0.18s ease;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      color: #ffffff;
+    }
+
+    .hero {
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01) 20%, rgba(255,255,255,0) 45%),
+        radial-gradient(circle at 12% 16%, rgba(181,138,54,0.13), transparent 20%),
+        radial-gradient(circle at 75% 24%, rgba(120,25,25,0.15), transparent 13%);
+    }
+
+    .hero-inner {
+      min-height: 335px;
+      display: flex;
+      align-items: center;
+      padding: 54px 0 42px;
+    }
+
+    .hero-copy {
+      max-width: 760px;
+    }
+
+    .eyebrow {
+      color: #cbc4b7;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(2.2rem, 5vw, 4.1rem);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.8;
+      max-width: 900px;
+    }
+
+    .hero-actions {
+      margin-top: 28px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: transparent;
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 14px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .main,
+    .leadership-wrap {
+      padding: 58px 0 42px;
+    }
+
+    .section-title {
+      margin: 0 0 18px;
+      font-size: 1.55rem;
+      letter-spacing: -0.03em;
+    }
+
+    .application-layout {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .card,
+    .leader-card {
+      background: linear-gradient(180deg, rgba(10,13,18,0.95), rgba(5,8,12,0.98));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 1.05rem;
+      font-weight: 900;
+    }
+
+    .card-body,
+    form {
+      padding: 18px;
+    }
+
+    .info-box {
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.02);
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .info-box strong,
+    .info-box b {
+      color: var(--text);
+    }
+
+    .info-box ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .subheading {
+      font-size: 0.95rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #cfc9be;
+      margin: 12px 0 10px;
+      font-weight: 900;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-weight: 800;
+      font-size: 0.98rem;
+      line-height: 1.4;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.45);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 14px 15px;
+      font: inherit;
+      outline: none;
+      transition: border-color 0.18s ease, background 0.18s ease;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #8f8a81;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(181,138,54,0.5);
+      background: rgba(0,0,0,0.6);
+    }
+
+    textarea {
+      min-height: 122px;
+      resize: vertical;
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 16px 0 14px;
+    }
+
+    .checkboxes {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 16px 16px 4px;
+      background: rgba(255,255,255,0.02);
+      margin-bottom: 14px;
+    }
+
+    .check {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: #ddd8ce;
+      font-weight: 700;
+    }
+
+    .check input {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--gold);
+    }
+
+    .submit {
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 14px;
+      font-weight: 900;
+    }
+
+    .leadership-wrap {
+      display: none;
+    }
+
+    .leader-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .leader-card {
+      padding: 22px;
+    }
+
+    .leader-rank {
+      color: var(--gold-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 900;
+      font-size: 0.86rem;
+      margin-bottom: 8px;
+    }
+
+    .leader-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.18rem;
+    }
+
+    .leader-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .footer {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 34px 0 42px;
+      color: var(--muted);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-title {
+      color: var(--text);
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 18px;
+      font-weight: 700;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      display: none;
+      margin-top: 14px;
+      color: #dcc48e;
+      font-weight: 800;
+    }
+
+    .status.error {
+      color: #ff9f9f;
+    }
+
+    @media (max-width: 980px) {
+      .application-layout,
+      .leader-grid,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px 0;
+      }
+
+      .nav {
+        gap: 18px;
+      }
+
+      .hero-inner {
+        min-height: 280px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">W</div>
+        <span>Warfront 1941</span>
+      </div>
+      <nav class="nav">
+        <a href="#application" class="active" data-view="application">Application</a>
+        <a href="#leadership" data-view="leadership">Leadership</a>
+        <a href="#" id="discordNav">Discord</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        <div class="eyebrow">Application</div>
+        <h1>Warfront 1941 Application</h1>
+        <p>
+          Please keep this application community-safe and do not include sensitive personal
+          information. You must be in our Discord before applying.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="#" id="discordHero">Join Our Discord!</a>
+          <a class="button" href="#leadership" data-view="leadership">View Leadership</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <section id="applicationView" class="main">
+      <div class="container application-layout">
+        <aside class="card">
+          <div class="card-header">Before You Submit</div>
+          <div class="card-body">
+            <div class="info-box">
+              <strong>Important:</strong> Do not put sensitive information in this application.
+            </div>
+            <div class="info-box">
+              <strong>Response time:</strong> Most applications are answered within <b>24–72 hours</b>.
+            </div>
+            <div class="info-box">
+              <strong>Tips:</strong>
+              <ul>
+                <li>Use your actual Discord username so we can contact you.</li>
+                <li>Write detailed answers instead of one-word responses.</li>
+                <li>Show maturity, teamwork, and knowledge of the community.</li>
+                <li>Make sure you already joined the Discord first.</li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+
+        <section class="card" id="application">
+          <div class="card-header">Application Form</div>
+          <form id="applicationForm">
+            <div class="grid">
+              <div class="field">
+                <label for="rpname">Your RP Name</label>
+                <input id="rpname" name="rp_name" type="text" placeholder="Example: John Carter" required />
+              </div>
+
+              <div class="field">
+                <label for="discord">Discord Username & ID</label>
+                <input id="discord" name="discord_username" type="text" placeholder="Example: yourname / 123456789" required />
+              </div>
+
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" required />
+              </div>
+
+              <div class="field">
+                <label for="age">Age</label>
+                <input id="age" name="age" type="number" min="13" max="99" placeholder="Your age" required />
+              </div>
+
+              <div class="field full">
+                <label for="steam">Steam Profile Link</label>
+                <input id="steam" name="steam_profile" type="url" placeholder="https://steamcommunity.com/id/..." />
+              </div>
+
+              <div class="field">
+                <label for="findus">How did you find us?</label>
+                <select id="findus" name="found_us" required>
+                  <option value="">Select</option>
+                  <option>Discord</option>
+                  <option>Friend</option>
+                  <option>TikTok</option>
+                  <option>YouTube</option>
+                  <option>Other</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="group">Which group are you applying for?</label>
+                <input id="group" name="group" type="text" placeholder="Infantry, Logistics, Armor, etc." required />
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="subheading">Experience & Intent</div>
+
+            <div class="field full">
+              <label for="experience">Previous roleplay experience?</label>
+              <textarea id="experience" name="experience" placeholder="Tell us about your prior roleplay, milsim, or leadership experience..."></textarea>
+            </div>
+
+            <div class="field full">
+              <label for="whyjoin">Why do you want to join Warfront 1941?</label>
+              <textarea id="whyjoin" name="why_join" placeholder="What are you looking for in this community?"></textarea>
+            </div>
+
+            <div class="field full">
+              <label for="about">Tell us about yourself</label>
+              <textarea id="about" name="about_you" placeholder="Playstyle, personality, and what you bring to the community..."></textarea>
+            </div>
+
+            <div class="divider"></div>
+            <div class="subheading">Community Knowledge</div>
+
+            <div class="field full">
+              <label for="rules">What do fair play, respect, teamwork, and staying in character mean to you?</label>
+              <textarea id="rules" name="community_knowledge" placeholder="Explain in your own words..."></textarea>
+            </div>
+
+            <div class="field full">
+              <label for="availability">What is your availability?</label>
+              <textarea id="availability" name="availability" placeholder="Days and times you can play..."></textarea>
+            </div>
+
+            <div class="checkboxes">
+              <label class="check">
+                <input type="checkbox" required />
+                <span>I confirm I did not include sensitive information.</span>
+              </label>
+              <label class="check">
+                <input type="checkbox" required />
+                <span>I agree to follow all server rules and policies.</span>
+              </label>
+            </div>
+
+            <button class="button submit" type="submit">Submit Application</button>
+            <div class="status" id="formStatus"></div>
+          </form>
+        </section>
+      </div>
+    </section>
+
+    <section id="leadershipView" class="leadership-wrap">
+      <div class="container">
+        <h2 class="section-title">Leadership</h2>
+        <div class="leader-grid">
+          <article class="leader-card">
+            <div class="leader-rank">Warfront 1941 - Director</div>
+            <h3>Leader Name</h3>
+            <p>Replace this with your main leader's name and role.</p>
+          </article>
+
+          <article class="leader-card">
+            <div class="leader-rank">Warfront 1941 - Oversight</div>
+            <h3>Leader Name</h3>
+            <p>Replace this with another leadership member and their role.</p>
+          </article>
+
+          <article class="leader-card">
+            <div class="leader-rank">Warfront 1941 - Operations Lead</div>
+            <h3>Leader Name</h3>
+            <p>Replace this with another leadership member and their role.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <div class="footer-title">Warfront 1941 Application</div>
+        <div>© 2026 Warfront 1941.</div>
+      </div>
+      <div class="footer-links">
+        <a href="#application" data-view="application">Application</a>
+        <a href="#leadership" data-view="leadership">Leadership</a>
+        <a href="#" id="discordFooter">Discord</a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  const applicationView = document.getElementById('applicationView');
+  const leadershipView = document.getElementById('leadershipView');
+  const viewLinks = document.querySelectorAll('[data-view]');
+  const discordURL = 'https://discord.gg/cttuyppw4t';
+  const form = document.getElementById('applicationForm');
+  const formStatus = document.getElementById('formStatus');
+
+  function setActiveView(view) {
+    const isLeadership = view === 'leadership';
+    applicationView.style.display = isLeadership ? 'none' : 'block';
+    leadershipView.style.display = isLeadership ? 'block' : 'none';
+
+    viewLinks.forEach(link => {
+      link.classList.toggle('active', link.dataset.view === view);
+    });
+
+    history.replaceState(null, '', isLeadership ? '#leadership' : '#application');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  viewLinks.forEach(link => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      setActiveView(link.dataset.view);
+    });
+  });
+
+  function openDiscord(event) {
+    event.preventDefault();
+    window.open(discordURL, '_blank');
+  }
+
+  document.getElementById('discordNav').addEventListener('click', openDiscord);
+  document.getElementById('discordHero').addEventListener('click', openDiscord);
+  document.getElementById('discordFooter').addEventListener('click', openDiscord);
+
+  if (window.location.hash === '#leadership') {
+    setActiveView('leadership');
+  } else {
+    setActiveView('application');
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    formStatus.style.display = 'none';
+    formStatus.classList.remove('error');
+
+    const payload = {
+      rp_name: form.rp_name.value.trim(),
+      discord_username: form.discord_username.value.trim(),
+      email: form.email.value.trim(),
+      age: form.age.value.trim(),
+      steam_profile: form.steam_profile.value.trim(),
+      found_us: form.found_us.value,
+      group: form.group.value.trim(),
+      experience: form.experience.value.trim(),
+      why_join: form.why_join.value.trim(),
+      about_you: form.about_you.value.trim(),
+      community_knowledge: form.community_knowledge.value.trim(),
+      availability: form.availability.value.trim()
+    };
+
+    try {
+      const response = await fetch('/.netlify/functions/submit-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const rawText = await response.text();
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${rawText || 'empty response'}`);
+      }
+
+      form.reset();
+      formStatus.textContent = `Success: ${rawText || 'application submitted'}`;
+      formStatus.style.display = 'block';
+    } catch (error) {
+      formStatus.textContent = error.message || 'Error submitting form.';
+      formStatus.classList.add('error');
+      formStatus.style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>
