@@ -702,8 +702,8 @@
         }
 
         form.reset();
-        formStatus.textContent = data.message || 'Application submitted successfully.';
-        formStatus.style.display = 'block';
+        formStatus.textContent = '';
+        formStatus.style.display = 'none';
       } catch (error) {
         formStatus.textContent = error.message || 'Error submitting form.';
         formStatus.classList.add('error');
