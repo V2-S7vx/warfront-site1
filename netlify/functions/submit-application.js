@@ -67,8 +67,10 @@ exports.handler = async (event) => {
 
     const clean = (value, max = 1000) => {
       if (value === null || value === undefined) return "Not provided";
+
       const text = String(value).trim();
       if (!text) return "Not provided";
+
       return text
         .replace(/@everyone/g, "@ everyone")
         .replace(/@here/g, "@ here")
@@ -91,7 +93,7 @@ exports.handler = async (event) => {
         { name: "Previous Experience", value: clean(body.experience), inline: false },
         { name: "Why Join", value: clean(body.why_join), inline: false },
         { name: "About You", value: clean(body.about_you), inline: false },
-        { name: "Give an example of, RDM, VDM, FRP, FEARRP, and Meta Gaming", value: clean(body.community_knowledge), inline: false },
+        { name: "Community Knowledge", value: clean(body.community_knowledge), inline: false },
         { name: "Availability", value: clean(body.availability), inline: false }
       ],
       footer: {
@@ -112,7 +114,7 @@ exports.handler = async (event) => {
           },
           {
             type: 2,
-            style: 1,
+            style: 4,
             custom_id: `app_decline_${userId}`,
             label: "Decline"
           }
@@ -123,13 +125,13 @@ exports.handler = async (event) => {
         components: [
           {
             type: 2,
-            style: 1,
+            style: 2,
             custom_id: `app_us_${userId}`,
             label: "US Faction"
           },
           {
             type: 2,
-            style: 1,
+            style: 2,
             custom_id: `app_germany_${userId}`,
             label: "Germany Faction"
           }
@@ -173,7 +175,10 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ ok: true, message: "Application sent to Discord." })
+      body: JSON.stringify({
+        ok: true,
+        message: "Application sent to Discord."
+      })
     };
   } catch (error) {
     return {
