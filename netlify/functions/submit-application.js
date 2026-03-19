@@ -43,15 +43,22 @@ exports.handler = async (event) => {
       }
     }
 
-    const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-    const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID || "1483624256909611078";
-    const PING_ROLE_ID = "1483595545548423289";
+    const BOT_TOKEN =
+      process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TOKEN;
+
+    const CHANNEL_ID =
+      process.env.DISCORD_CHANNEL_ID || "1483624256909611078";
+
+    const PING_ROLE_ID =
+      process.env.DISCORD_REVIEW_ROLE_ID || "1483595545548423289";
 
     if (!BOT_TOKEN) {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: "Missing DISCORD_BOT_TOKEN in Netlify environment variables" })
+        body: JSON.stringify({
+          error: "Missing Discord token. Add DISCORD_BOT_TOKEN or DISCORD_TOKEN in Netlify environment variables."
+        })
       };
     }
 
@@ -61,7 +68,9 @@ exports.handler = async (event) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: "discord_user_id must be a valid Discord user ID" })
+        body: JSON.stringify({
+          error: "discord_user_id must be a valid Discord user ID"
+        })
       };
     }
 
@@ -108,7 +117,7 @@ exports.handler = async (event) => {
         components: [
           {
             type: 2,
-            style: 1,
+            style: 3,
             custom_id: `app_accept_${userId}`,
             label: "Accept"
           },
@@ -144,7 +153,7 @@ exports.handler = async (event) => {
       {
         method: "POST",
         headers: {
-          "Authorization": `Bot ${BOT_TOKEN}`,
+          Authorization: `Bot ${BOT_TOKEN.trim()}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
