@@ -70,6 +70,11 @@ exports.handler = async (event) => {
       "1483643776953090221"
     ).trim();
 
+    const PENDING_ROLE_ID = (
+      process.env.DISCORD_PENDING_APPLICATION_ROLE_ID ||
+      "1484269890574487652"
+    ).trim();
+
     if (!BOT_TOKEN) {
       return {
         statusCode: 500,
@@ -170,6 +175,38 @@ exports.handler = async (event) => {
       };
     }
 
+    if (memberRoles.includes(PENDING_ROLE_ID)) {
+      return {
+        statusCode: 403,
+        headers,
+        body: JSON.stringify({
+          error: "You already have an application pending. Please wait until it has been reviewed."
+        })
+      };
+    }
+
+    const roleAddResponse = await fetch(
+      `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userId}/roles/${PENDING_ROLE_ID}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bot ${BOT_TOKEN}`
+        }
+      }
+    );
+
+    if (!roleAddResponse.ok) {
+      const roleAddText = await roleAddResponse.text();
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: "Failed to assign pending application role.",
+          details: roleAddText
+        })
+      };
+    }
+
     const embed = {
       title: "New Warfront 1941 Application",
       color: 11831862,
@@ -211,23 +248,6 @@ exports.handler = async (event) => {
             label: "Decline"
           }
         ]
-      },
-      {
-        type: 1,
-        components: [
-          {
-            type: 2,
-            style: 2,
-            custom_id: `app_us_${userId}`,
-            label: "US Faction"
-          },
-          {
-            type: 2,
-            style: 2,
-            custom_id: `app_germany_${userId}`,
-            label: "Germany Faction"
-          }
-        ]
       }
     ];
 
@@ -251,6 +271,16 @@ exports.handler = async (event) => {
     const discordText = await discordResponse.text();
 
     if (!discordResponse.ok) {
+      await fetch(
+        `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userId}/roles/${PENDING_ROLE_ID}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bot ${BOT_TOKEN}`
+          }
+        }
+      );
+
       return {
         statusCode: 500,
         headers,
