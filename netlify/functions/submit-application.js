@@ -75,6 +75,10 @@ exports.handler = async (event) => {
       "1484269890574487652"
     ).trim();
 
+    const US_FACTION_ROLE_ID = "1483561796143943742";
+    const GERMANY_FACTION_ROLE_ID = "1483561650601726030";
+    const BLACKLIST_ROLE_ID = "1484246463906054295";
+
     if (!BOT_TOKEN) {
       return {
         statusCode: 500,
@@ -164,6 +168,26 @@ exports.handler = async (event) => {
     }
 
     const memberRoles = Array.isArray(memberData.roles) ? memberData.roles : [];
+
+    if (memberRoles.includes(US_FACTION_ROLE_ID) || memberRoles.includes(GERMANY_FACTION_ROLE_ID)) {
+      return {
+        statusCode: 403,
+        headers,
+        body: JSON.stringify({
+          error: "**You are already in a faction!**"
+        })
+      };
+    }
+
+    if (memberRoles.includes(BLACKLIST_ROLE_ID)) {
+      return {
+        statusCode: 403,
+        headers,
+        body: JSON.stringify({
+          error: "**You are currently blacklisted from joining factions, Please wait until you blacklist has been removed!**"
+        })
+      };
+    }
 
     if (memberRoles.includes(DECLINED_ROLE_ID)) {
       return {
