@@ -43,14 +43,32 @@ exports.handler = async (event) => {
       }
     }
 
-    const BOT_TOKEN =
-      process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TOKEN;
+    const BOT_TOKEN = (
+      process.env.DISCORD_BOT_TOKEN ||
+      process.env.DISCORD_TOKEN ||
+      ""
+    ).trim();
 
-    const CHANNEL_ID =
-      process.env.DISCORD_CHANNEL_ID || "1483624256909611078";
+    const GUILD_ID = (
+      process.env.DISCORD_GUILD_ID ||
+      process.env.GUILD_ID ||
+      ""
+    ).trim();
 
-    const PING_ROLE_ID =
-      process.env.DISCORD_REVIEW_ROLE_ID || "1483595545548423289";
+    const CHANNEL_ID = (
+      process.env.DISCORD_CHANNEL_ID ||
+      "1483624256909611078"
+    ).trim();
+
+    const PING_ROLE_ID = (
+      process.env.DISCORD_REVIEW_ROLE_ID ||
+      "1483595545548423289"
+    ).trim();
+
+    const DECLINED_ROLE_ID = (
+      process.env.DISCORD_DECLINED_ROLE_ID ||
+      "1483643776953090221"
+    ).trim();
 
     if (!BOT_TOKEN) {
       return {
@@ -58,6 +76,16 @@ exports.handler = async (event) => {
         headers,
         body: JSON.stringify({
           error: "Missing Discord token. Add DISCORD_BOT_TOKEN or DISCORD_TOKEN in Netlify environment variables."
+        })
+      };
+    }
+
+    if (!GUILD_ID) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: "Missing Discord guild ID. Add DISCORD_GUILD_ID or GUILD_ID in Netlify environment variables."
         })
       };
     }
@@ -86,6 +114,61 @@ exports.handler = async (event) => {
         .replace(/<@&?\d+>/g, "[mention removed]")
         .slice(0, max);
     };
+
+    const discordHeaders = {
+      Authorization: `Bot ${BOT_TOKEN}`,
+      "Content-Type": "application/json"
+    };
+
+    const memberResponse = await fetch(
+      `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userId}`,
+      {
+        method: "GET",
+        headers: discordHeaders
+      }
+    );
+
+    if (memberResponse.status === 404) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: "You must be in the Discord server before applying."
+        })
+      };
+    }
+
+    const memberText = await memberResponse.text();
+
+    if (!memberResponse.ok) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: `Discord member lookup failed: ${memberResponse.status}`,
+          details: memberText
+        })
+      };
+    }
+
+    let memberData = {};
+    try {
+      memberData = JSON.parse(memberText);
+    } catch {
+      memberData = {};
+    }
+
+    const memberRoles = Array.isArray(memberData.roles) ? memberData.roles : [];
+
+    if (memberRoles.includes(DECLINED_ROLE_ID)) {
+      return {
+        statusCode: 403,
+        headers,
+        body: JSON.stringify({
+          error: "You cannot reapply yet. Please wait until your 48 hour cooldown ends."
+        })
+      };
+    }
 
     const embed = {
       title: "New Warfront 1941 Application",
@@ -152,10 +235,7 @@ exports.handler = async (event) => {
       `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`,
       {
         method: "POST",
-        headers: {
-          Authorization: `Bot ${BOT_TOKEN.trim()}`,
-          "Content-Type": "application/json"
-        },
+        headers: discordHeaders,
         body: JSON.stringify({
           content: `<@&${PING_ROLE_ID}> New application from <@${userId}>`,
           embeds: [embed],
@@ -186,7 +266,7 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({
         ok: true,
-        message: "Application sent to Discord."
+        message: "ok"
       })
     };
   } catch (error) {
